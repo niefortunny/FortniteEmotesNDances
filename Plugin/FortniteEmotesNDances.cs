@@ -20,7 +20,7 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
     public override string ModuleName => "Fortnite Emotes & Dances";
     public override string ModuleDescription => "CS2 Port of Fortnite Emotes & Dances";
     public override string ModuleAuthor => "Cruze (https://github.com/cruze03)";
-    public override string ModuleVersion => "1.1.7-fix";
+    public override string ModuleVersion => "1.1.8";
 
     public required PluginConfig Config { get; set; } = new();
 
@@ -43,8 +43,6 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
     private Dictionary<int, Dictionary<int, ushort>> playerItems = [];
 
     public FakeConVar<bool> EmotesEnable = new("css_fortnite_emotes_enable", "ConVar to toggle emotes and dances", true);
-
-    private static CRayTrace? g_RayTraceApi;
 
     public void OnConfigParsed(PluginConfig config)
     {
@@ -341,7 +339,6 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
         RegisterListener<Listeners.OnMapStart>(OnMapStart);
         RegisterListener<Listeners.OnTick>(OnTick);
         RegisterListener<Listeners.OnServerPrecacheResources>(OnServerPrecacheResources);
-        RegisterListener<Listeners.OnMetamodAllPluginsLoaded>(OnMetamodAllPluginsLoaded);
 
         Transmit_OnLoad();
 
@@ -363,7 +360,6 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
         if (hotReload)
         {
             OnMapStart(Server.MapName);
-            OnMetamodAllPluginsLoaded();
         }
     }
 
@@ -380,7 +376,6 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
         RemoveListener<Listeners.OnMapStart>(OnMapStart);
         RemoveListener<Listeners.OnTick>(OnTick);
         RemoveListener<Listeners.OnServerPrecacheResources>(OnServerPrecacheResources);
-        RemoveListener<Listeners.OnMetamodAllPluginsLoaded>(OnMetamodAllPluginsLoaded);
 
         // RemoveCommandListener("say", OnSay, HookMode.Pre);
         // RemoveCommandListener("say_team", OnSay, HookMode.Pre);
@@ -389,17 +384,6 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
 
         if (Config.StopDamageWhenInEmote)
             RemoveListener<Listeners.OnEntityTakeDamagePre>(OnTakeDamage);
-    }
-
-    private void OnMetamodAllPluginsLoaded()
-    {
-        if (!RayTraceBridge.Initialize())
-        {
-            Logger.LogError("RayTrace initialization failed. Is RayTrace-MM module loaded?");
-            g_RayTraceApi = null;
-            return;
-        }
-        g_RayTraceApi = new CRayTrace();
     }
 
     private HookResult OnTakeDamage(CBaseEntity victim, CTakeDamageInfo damageinfo)

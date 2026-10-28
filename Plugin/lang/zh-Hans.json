@@ -1,7 +1,7 @@
 {
-    "emote.prefix": "[{green}CR-Emotes{default}]",
     "emote.command.help": "预期用法: {lime}!{0} {1}",
     "emote.command.no-permission": "{lightred}你没有权限使用这个命令。",
+    "emote.vip-required": "{lightred}使用表情需要 VIP 权限。{default}商店：{lime}https://www.hsmania.net",
     "emote.command.server-only": "{lightred}这个命令只能由服务器使用。",
     "emote.command.client-only": "{lightred}这个命令只能由客户端使用。",
     "emote.emotemenutitle": "表情菜单",
@@ -31,7 +31,6 @@
     "emote.list-chat-triggers": "以下是表情/舞蹈的聊天触发器列表。",
     "emote.notallowed.warmupftcheck": "{lightred}你只能在热身或冻结时间使用这个命令。",
     "emote.notallowed.warmupftrecheck": "{lightred}你只能在热身/冻结时间/回合结束时使用这个命令。",
-
     "DanceMoves": "舞蹈动作",
     "ElectroShuffle": "电子摇摆",
     "Emote_AerobicChamp": "有氧",

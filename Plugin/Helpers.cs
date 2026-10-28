@@ -15,6 +15,8 @@ using System.Runtime.InteropServices;
 using FortniteEmotes.API;
 using System.Numerics;
 
+using FortniteEmotes.Extensions;
+
 namespace FortniteEmotes;
 
 public partial class Plugin
@@ -79,14 +81,14 @@ public partial class Plugin
             case 1:
                 if (g_GameRules == null || (!g_GameRules.WarmupPeriod && !g_GameRules.FreezePeriod))
                 {
-                    error = $" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, "emote.notallowed.warmupftcheck")}";
+                    error = Localizer.ForPlayer(player, "emote.notallowed.warmupftcheck");
                     return false;
                 }
                 break;
             case 2:
                 if (g_GameRules == null || (!g_GameRules.WarmupPeriod && !g_GameRules.FreezePeriod && !g_bRoundEnd))
                 {
-                    error = $" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, "emote.notallowed.warmupftrecheck")}";
+                    error = Localizer.ForPlayer(player, "emote.notallowed.warmupftrecheck");
                     return false;
                 }
                 break;
@@ -96,13 +98,13 @@ public partial class Plugin
 
         if (!target.IsValidPlayer() || !target.PlayerPawn.IsValidPawnAlive() || target.ControllingBot || target.PlayerPawn.Value!.AbsOrigin == null || target.PlayerPawn.Value.AbsRotation == null || target.PlayerPawn.Value.CameraServices == null)
         {
-            error = $" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, $"emote{(player == null ? "" : ".player")}.alivecheck")}";
+            error = Localizer.ForPlayer(player, $"emote{(player == null ? "" : ".player")}.alivecheck");
             return false;
         }
 
         if (target.PlayerPawn.Value.IsScoped)
         {
-            error = $" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, $"emote{(player == null ? "" : ".player")}.scopecheck")}";
+            error = Localizer.ForPlayer(player, $"emote{(player == null ? "" : ".player")}.scopecheck");
             return false;
         }
 
@@ -117,7 +119,7 @@ public partial class Plugin
 
         if (g_PlayerSettings[steamID].Cooldown > now && player == null)
         {
-            error = $" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, "emote.cooldowncheck", (int)(g_PlayerSettings[steamID].Cooldown - now).TotalSeconds)}";
+            error = Localizer.ForPlayer(player, "emote.cooldowncheck", (int)(g_PlayerSettings[steamID].Cooldown - now).TotalSeconds);
             return false;
         }
 
@@ -125,12 +127,12 @@ public partial class Plugin
         {
             if (((PlayerFlags)target.Pawn.Value!.Flags & PlayerFlags.FL_ONGROUND) != PlayerFlags.FL_ONGROUND || (target.PlayerPawn.Value.GroundEntity != null && target.PlayerPawn.Value.GroundEntity.IsValid && target.PlayerPawn.Value.GroundEntity.Index != 0))
             {
-                error = $" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, $"emote{(player == null ? "" : ".player")}.groundcheck")}";
+                error = Localizer.ForPlayer(player, $"emote{(player == null ? "" : ".player")}.groundcheck");
                 return false;
             }
             if (((PlayerFlags)target.Pawn.Value!.Flags & PlayerFlags.FL_DUCKING) == PlayerFlags.FL_DUCKING)
             {
-                error = $" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, $"emote{(player == null ? "" : ".player")}.duckcheck")}";
+                error = Localizer.ForPlayer(player, $"emote{(player == null ? "" : ".player")}.duckcheck");
                 return false;
             }
         }
@@ -148,14 +150,21 @@ public partial class Plugin
             }
             else
             {
-                error = $" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, $"emote.stoppedbyapi")}";
+                error = Localizer.ForPlayer(player, $"emote.stoppedbyapi");
             }
             return false;
         }
 
         if (!EmotesEnable.Value)
         {
-            error = $" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, $"emote{(player == null ? "" : ".player")}.disabledbyadmin")}";
+            error = Localizer.ForPlayer(player, $"emote{(player == null ? "" : ".player")}.disabledbyadmin");
+            return false;
+        }
+
+        if (player == null && !HasPermision(target, Config.VIPPerm))
+        {
+            DenyVipAccess(target);
+            error = "";
             return false;
         }
 
@@ -169,7 +178,7 @@ public partial class Plugin
 
         if (prop == null || prop.Entity == null || prop.Entity.Handle == IntPtr.Zero || !prop.IsValid)
         {
-            error = $" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, "emote.unknownerror")}";
+            error = Localizer.ForPlayer(player, "emote.unknownerror");
             return false;
         }
 
@@ -269,7 +278,7 @@ public partial class Plugin
 
         string emoteName = $"{Localizer.ForPlayer(target, $"{emote.Name}")}";
 
-        target.PrintToChat($" {Localizer.ForPlayer(target, "emote.prefix")} {Localizer.ForPlayer(target, "emote.playing", emoteName)}");
+        target.PrintToChatWithSound(Localizer.ForPlayer(target, "emote.playing", emoteName));
 
         if (Config.SoundModuleEnabled)
         {
@@ -322,6 +331,14 @@ public partial class Plugin
         return bAccess;
     }
 
+    private void DenyVipAccess(CCSPlayerController player)
+    {
+        player.PrintToChatWithSound(
+            Localizer.ForPlayer(player, "emote.vip-required"),
+            "UI.ArmsRace.Demoted",
+            isWarning: true);
+    }
+
     private CDynamicProp? CreateClone(CCSPlayerController player, CDynamicProp prop, string propName)
     {
         string model = player.PlayerPawn.Value?.GetModel() ?? string.Empty;
@@ -361,7 +378,7 @@ public partial class Plugin
         if (Config.EmoteFreezePlayer)
         {
             if (g_PlayerSettings.ContainsKey(steamID))
-                g_PlayerSettings[steamID].PlayerMoveType = Config.EmoteMenuType == 2 && Menu.GetMenus(player) != null && Menu.GetMenus(player)?.Count > 0 ? MoveType_t.MOVETYPE_WALK : player.PlayerPawn.Value.ActualMoveType;
+                g_PlayerSettings[steamID].PlayerMoveType = player.PlayerPawn.Value.ActualMoveType;
             SetPlayerMoveType(player, MoveType_t.MOVETYPE_OBSOLETE);
         }
 
@@ -544,7 +561,6 @@ public partial class Plugin
         SetPlayerVisible(player);
 
         if (g_PlayerSettings.ContainsKey(steamID)
-            && (Config.EmoteMenuType != 2 || (Config.EmoteMenuType == 2 && (Menu.GetMenus(player) == null || Menu.GetMenus(player)?.Count <= 0)))
             && player.PlayerPawn.IsValidPawnAlive()
             && g_PlayerSettings[steamID].PlayerMoveType != player.PlayerPawn.Value!.ActualMoveType)
             SetPlayerMoveType(player, g_PlayerSettings[steamID].PlayerMoveType);
@@ -743,6 +759,7 @@ public partial class Plugin
 
         player.PlayerPawn.Value.Render = Color.FromArgb(0, 255, 255, 255);
         Utilities.SetStateChanged(player.PlayerPawn.Value, "CBaseModelEntity", "m_clrRender");
+        SetPlayerWearablesVisible(player, false);
     }
 
     public void SetPlayerVisible(CCSPlayerController player)
@@ -760,6 +777,33 @@ public partial class Plugin
         {
             player.PlayerPawn.Value!.Render = Color.FromArgb(255, 255, 255, 255);
             Utilities.SetStateChanged(player.PlayerPawn.Value, "CBaseModelEntity", "m_clrRender");
+        }
+
+        SetPlayerWearablesVisible(player, true);
+    }
+
+    private static void SetPlayerWearablesVisible(CCSPlayerController player, bool visible)
+    {
+        var pawn = player.PlayerPawn.Value;
+        if (pawn == null)
+            return;
+
+        var wearables = pawn.MyWearables;
+        if (wearables == null)
+            return;
+
+        var color = visible
+            ? Color.FromArgb(255, 255, 255, 255)
+            : Color.FromArgb(0, 255, 255, 255);
+
+        foreach (var handle in wearables)
+        {
+            var wearable = handle.Value;
+            if (wearable == null || !wearable.IsValid)
+                continue;
+
+            wearable.Render = color;
+            Utilities.SetStateChanged(wearable, "CBaseModelEntity", "m_clrRender");
         }
     }
 
@@ -985,7 +1029,7 @@ public partial class Plugin
         }
     }
 
-    private void RefreshPlayerGloves(CCSPlayerController player, bool update = false)
+    private void RefreshPlayerGloves(CCSPlayerController player, bool restore = false)
     {
         if (!Config.EmoteGlovesFix)
             return;
@@ -997,19 +1041,32 @@ public partial class Plugin
         if (playerPawnValue == null)
             return;
 
-        CEconItemView item = playerPawnValue.EconGloves;
-        item.NetworkedDynamicAttributes.Attributes.RemoveAll();
-        item.AttributeList.Attributes.RemoveAll();
-
+        // Keep EconGloves data intact — Inventory Simulator / skin plugins store paint there.
+        // Only toggle visibility/bodygroup; never wipe attributes.
         SetBodygroup(playerPawnValue, "first_or_third_person", 0);
 
-        if (update) return;
+        if (!restore)
+        {
+            // Stay hidden for the whole emote. Flipping bodygroup back to 1 mid-emote
+            // left floating glove wearables next to the invisible player/clone.
+            SetPlayerWearablesVisible(player, false);
+            return;
+        }
 
         AddTimer(0.2f, () =>
         {
-            // TODO: Re-give gloves
+            if (!player.IsValidPlayer() || !player.PlayerPawn.IsValidPawnAlive())
+                return;
 
-            SetBodygroup(playerPawnValue, "first_or_third_person", 1);
+            var pawn = player.PlayerPawn.Value;
+            if (pawn == null)
+                return;
+
+            // Same refresh signal Inventory Simulator uses after glove changes.
+            pawn.EconGlovesChanged++;
+            Utilities.SetStateChanged(pawn, "CCSPlayerPawn", "m_nEconGlovesChanged");
+            SetBodygroup(pawn, "first_or_third_person", 1);
+            SetPlayerWearablesVisible(player, true);
         });
     }
 
@@ -1165,7 +1222,7 @@ public partial class Plugin
         return File.Exists(vdfPath) && File.Exists(binaryPath);
     }
 
-    private readonly string[] _requiredShared = ["FortniteEmotesNDancesAPI", "KitsuneMenu"];
+    private readonly string[] _requiredShared = ["FortniteEmotesNDancesAPI"];
     private bool AreAllDependaciesInstalled(ref string error)
     {
         string vdfPath = Path.Combine(Server.GameDirectory, "csgo", "addons/metamod", "multiaddonmanager.vdf");

@@ -11,6 +11,7 @@ using CounterStrikeSharp.API.Modules.UserMessages;
 using CounterStrikeSharp.API.Core.Translations;
 using Microsoft.Extensions.Logging;
 using FortniteEmotes.API;
+using FortniteEmotes.Extensions;
 
 namespace FortniteEmotes;
 
@@ -80,28 +81,17 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
                 if (player == null)
                     return;
 
-                bool bAccess = HasPermision(player, Config.EmoteDanceCommandPerm);
+                bool bAccess = HasPermision(player, Config.VIPPerm);
 
                 if (!bAccess)
                 {
-                    player.PrintToChat($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, "emote.command.no-permission")}");
+                    DenyVipAccess(player);
                     return;
                 }
 
                 if (command.ArgCount == 1)
                 {
-                    switch (Config.EmoteMenuType)
-                    {
-                        case 0:
-                            ShowChatMenu(player, false);
-                            break;
-                        case 1:
-                            ShowCenterMenu(player, false);
-                            break;
-                        default:
-                            ShowKitsuneMenu(player, false);
-                            break;
-                    }
+                    ShowEmoteMenu(player, false);
                     return;
                 }
 
@@ -111,13 +101,13 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
 
                 if (emoteObj == null)
                 {
-                    player.PrintToChat($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, "emote.not-found")}");
+                    player.PrintToChatWithSound(Localizer.ForPlayer(player, "emote.not-found"), "Vote.Failed", isWarning: true);
                     return;
                 }
                 string error = "";
                 if (!PlayEmote(player, emoteObj, ref error))
                 {
-                    player.PrintToChat(error);
+                    player.PrintToChatWithSound(error, "Vote.Failed", isWarning: true);
                 }
             }, CommandUsage.CLIENT_ONLY);
         }
@@ -129,28 +119,17 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
                 if (player == null)
                     return;
 
-                bool bAccess = HasPermision(player, Config.EmoteDanceCommandPerm);
+                bool bAccess = HasPermision(player, Config.VIPPerm);
 
                 if (!bAccess)
                 {
-                    player.PrintToChat($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, "emote.command.no-permission")}");
+                    DenyVipAccess(player);
                     return;
                 }
 
                 if (command.ArgCount == 1)
                 {
-                    switch (Config.EmoteMenuType)
-                    {
-                        case 0:
-                            ShowChatMenu(player, true);
-                            break;
-                        case 1:
-                            ShowCenterMenu(player, true);
-                            break;
-                        default:
-                            ShowKitsuneMenu(player, true);
-                            break;
-                    }
+                    ShowEmoteMenu(player, true);
                     return;
                 }
 
@@ -160,7 +139,7 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
 
                 if (danceObj == null)
                 {
-                    player.PrintToChat($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, "emote.not-found")}");
+                    player.PrintToChatWithSound(Localizer.ForPlayer(player, "emote.not-found"), "Vote.Failed", isWarning: true);
                     return;
                 }
 
@@ -168,7 +147,7 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
                 if (!PlayEmote(player, danceObj, ref error))
                 {
                     if (!string.IsNullOrEmpty(error))
-                        player.PrintToChat(error);
+                        player.PrintToChatWithSound(error, "Vote.Failed", isWarning: true);
                 }
             }, CommandUsage.CLIENT_ONLY);
         }
@@ -182,14 +161,14 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
                     bool bAccess = HasPermision(player, Config.AdminSetEmoteDanceCommandPerm);
                     if (!bAccess)
                     {
-                        player.PrintToChat($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, "emote.command.no-permission")}");
+                        player.PrintToChatWithSound(Localizer.ForPlayer(player, "emote.command.no-permission"), "Vote.Failed", isWarning: true);
                         return;
                     }
                 }
 
                 if (command.ArgCount != 3)
                 {
-                    command.ReplyToCommand($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, "emote.setemote-usage", setemotecommand)}");
+                    command.ReplyToCommand(PrefixRed + Localizer.ForPlayer(player, "emote.setemote-usage", setemotecommand));
                     return;
                 }
 
@@ -199,14 +178,14 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
 
                 if (emoteObj == null)
                 {
-                    command.ReplyToCommand($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, "emote.not-found")}");
+                    command.ReplyToCommand(PrefixRed + Localizer.ForPlayer(player, "emote.not-found"));
                     return;
                 }
 
                 var targets = GetTarget(command);
                 if (targets == null)
                 {
-                    command.ReplyToCommand($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, $"emote.target-not-found")}");
+                    command.ReplyToCommand(PrefixRed + Localizer.ForPlayer(player, "emote.target-not-found"));
                     return;
                 }
 
@@ -224,9 +203,9 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
                     }
                 });
                 if (count > 0)
-                    command.ReplyToCommand($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, $"emote.played-emote-on-target", count)}");
+                    command.ReplyToCommand(Prefix + Localizer.ForPlayer(player, "emote.played-emote-on-target", count));
                 else
-                    command.ReplyToCommand($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, $"emote.failplayed-emote-on-target")}");
+                    command.ReplyToCommand(PrefixRed + Localizer.ForPlayer(player, "emote.failplayed-emote-on-target"));
             }, CommandUsage.CLIENT_AND_SERVER);
         }
 
@@ -239,14 +218,14 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
                     bool bAccess = HasPermision(player, Config.AdminSetEmoteDanceCommandPerm);
                     if (!bAccess)
                     {
-                        player.PrintToChat($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, "emote.command.no-permission")}");
+                        player.PrintToChatWithSound(Localizer.ForPlayer(player, "emote.command.no-permission"), "Vote.Failed", isWarning: true);
                         return;
                     }
                 }
 
                 if (command.ArgCount != 3)
                 {
-                    command.ReplyToCommand($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, "emote.setdance-usage", setdancecommand)}");
+                    command.ReplyToCommand(PrefixRed + Localizer.ForPlayer(player, "emote.setdance-usage", setdancecommand));
                     return;
                 }
 
@@ -256,14 +235,14 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
 
                 if (danceObj == null)
                 {
-                    command.ReplyToCommand($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, "emote.not-found")}");
+                    command.ReplyToCommand(PrefixRed + Localizer.ForPlayer(player, "emote.not-found"));
                     return;
                 }
 
                 var targets = GetTarget(command);
                 if (targets == null)
                 {
-                    command.ReplyToCommand($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, $"emote.target-not-found")}");
+                    command.ReplyToCommand(PrefixRed + Localizer.ForPlayer(player, "emote.target-not-found"));
                     return;
                 }
 
@@ -281,9 +260,9 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
                     }
                 });
                 if (count > 0)
-                    command.ReplyToCommand($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, $"emote.played-dance-on-target", count)}");
+                    command.ReplyToCommand(Prefix + Localizer.ForPlayer(player, "emote.played-dance-on-target", count));
                 else
-                    command.ReplyToCommand($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, $"emote.failplayed-dance-on-target")}");
+                    command.ReplyToCommand(PrefixRed + Localizer.ForPlayer(player, "emote.failplayed-dance-on-target"));
             }, CommandUsage.CLIENT_AND_SERVER);
         }
 
@@ -312,7 +291,7 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
                 g_CancelButtons.Add(PlayerButtons.Attack.ToString());
             else if (button.Equals("crouch", StringComparison.CurrentCultureIgnoreCase))
                 g_CancelButtons.Add(PlayerButtons.Duck.ToString());
-            else if (button.Equals("scoreboard", StringComparison.CurrentCultureIgnoreCase) && Config.EmoteMenuType != 2)
+            else if (button.Equals("scoreboard", StringComparison.CurrentCultureIgnoreCase))
                 g_CancelButtons.Add(PlayerButtons.Scoreboard.ToString());
             else if (button.Equals("inspect", StringComparison.CurrentCultureIgnoreCase))
                 g_CancelButtons.Add(PlayerButtons.Inspect.ToString());
@@ -349,7 +328,6 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
         if (Config.StopDamageWhenInEmote)
             RegisterListener<Listeners.OnEntityTakeDamagePre>(OnTakeDamage);
 
-        Menu_OnLoad();
         API_OnLoad();
 
         EmotesEnable.ValueChanged += (sender, value) =>
@@ -454,10 +432,10 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
         {
             if (trigger.Value.Any(message.Equals))
             {
-                bool hasPerm = HasPermision(player, Config.EmoteDanceCommandPerm);
+                bool hasPerm = HasPermision(player, Config.VIPPerm);
                 if (!hasPerm)
                 {
-                    player.PrintToChat($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, "emote.no-access")}");
+                    DenyVipAccess(player);
                     return HookResult.Stop;
                 }
 
@@ -465,7 +443,7 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
 
                 if (!hasPerm)
                 {
-                    player.PrintToChat($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, "emote.no-access")}");
+                    player.PrintToChatWithSound(Localizer.ForPlayer(player, "emote.no-access"), "Vote.Failed", isWarning: true);
                     return HookResult.Stop;
                 }
 
@@ -473,7 +451,7 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
                 if (!PlayEmote(player, trigger.Key, ref error))
                 {
                     if (!string.IsNullOrEmpty(error))
-                        player.PrintToChat(error);
+                        player.PrintToChatWithSound(error, "Vote.Failed", isWarning: true);
                 }
                 return HookResult.Stop;
             }
@@ -531,13 +509,10 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
                     continue;
                 }
 
-                if (Config.EmoteMenuType != 2 || (Config.EmoteMenuType == 2 && (Menu.GetMenus(player) == null || Menu.GetMenus(player)?.Count <= 0)))
+                if (g_CancelButtons.Any(button => player.Buttons.ToString().Contains(button)))
                 {
-                    if (g_CancelButtons.Any(button => player.Buttons.ToString().Contains(button)))
-                    {
-                        StopEmote(player);
-                        continue;
-                    }
+                    StopEmote(player);
+                    continue;
                 }
 
                 if (g_PlayerSettings[steamID].CameraProp != null && Config.CameraMoveable)
@@ -610,7 +585,7 @@ public partial class Plugin : BasePlugin, IPluginConfig<PluginConfig>
         if (player == null || !Config.ChatTriggersEnabled)
             return;
 
-        player.PrintToChat($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, "emote.list-chat-triggers")}");
+        player.PrintToChatWithSound(Localizer.ForPlayer(player, "emote.list-chat-triggers"));
 
         string batch = "";
 

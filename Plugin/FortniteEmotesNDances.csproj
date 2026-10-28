@@ -15,10 +15,10 @@
 
   <PropertyGroup>
     <CustomSourceDir>./gamedata</CustomSourceDir>
-    <CustomTargetDir>$(PublishDir)../../../gamedata</CustomTargetDir>
+    <CustomTargetDir>$(OutputPath)../../gamedata</CustomTargetDir>
   </PropertyGroup>
 
-  <Target Name="CopyCustomDirectory" AfterTargets="Publish">
+  <Target Name="CopyCustomDirectory" AfterTargets="Build">
     <MakeDir Directories="$(CustomTargetDir)" />
     <Copy SourceFiles="@(CustomSourceFiles)" DestinationFolder="$(CustomTargetDir)" SkipUnchangedFiles="true" />
   </Target>
@@ -28,15 +28,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CounterStrikeSharp.API" Version="1.0.375">
+    <PackageReference Include="CounterStrikeSharp.API" Version="1.0.376">
       <PrivateAssets>none</PrivateAssets>
       <ExcludeAssets>runtime</ExcludeAssets>
       <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.12" />
 
-    <Reference Include="KitsuneMenu">
-      <HintPath>FortniteEmotesNDances/shared/KitsuneMenu/KitsuneMenu.dll</HintPath>
+    <Reference Include="MenuManagerApi">
+      <HintPath>lib\MenuManagerApi.dll</HintPath>
+    </Reference>
+    <Reference Include="CoreSettings.Api">
+      <HintPath>lib/CoreSettings.Api.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <ProjectReference Include="..\API\FortniteEmotesNDancesAPI.csproj">
       <Private>false</Private>

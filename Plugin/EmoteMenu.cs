@@ -1,156 +1,85 @@
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Menu;
+using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Core.Translations;
+using CounterStrikeSharp.API.Modules.Menu;
+using CoreSettings;
+using MenuManager;
 using Microsoft.Extensions.Logging;
-using Menu;
-using Menu.Enums;
 using FortniteEmotes.API;
+using FortniteEmotes.Extensions;
 
 namespace FortniteEmotes;
+
 public partial class Plugin
 {
-    public KitsuneMenu Menu { get; private set; } = null!;
+    public static string Prefix => CoreSettingsPlugin.ApiCapability.Get()?.Get("prefix") ?? string.Empty;
+    public static string PrefixRed => CoreSettingsPlugin.ApiCapability.Get()?.Get("prefix_red") ?? string.Empty;
 
-    private void Menu_OnLoad()
+    private IMenuApi? _menuApi;
+    private readonly PluginCapability<IMenuApi?> _menuCapability = new("menu:nfcore");
+
+    public override void OnAllPluginsLoaded(bool hotReload)
     {
-        Menu = new KitsuneMenu(this);
+        if (CoreSettingsPlugin.ApiCapability.Get() is null)
+            Logger.LogError("[FortniteEmotes] coresettings:config is not registered. Is CoreSettings loaded, and is CoreSettings.Api.dll only in shared/?");
+
+        _menuApi = _menuCapability.Get();
+        if (_menuApi == null)
+            Logger.LogError("[FortniteEmotes] MenuManager Core not found...");
     }
 
-    private void ShowKitsuneMenu(CCSPlayerController player, bool isDance)
+    private void ShowEmoteMenu(CCSPlayerController player, bool isDance)
     {
-        if (Menu == null)
+        if (!player.IsValid)
         {
-            Logger.LogError($"Menu object is null. Cannot show fortnite menu to {player.PlayerName}.");
+            Logger.LogInformation($"[ShowEmoteMenu] {player.PlayerName} was invalid");
             return;
         }
 
-        string title = isDance ? Localizer.ForPlayer(player, "emote.dancemenutitle") : Localizer.ForPlayer(player, "emote.emotemenutitle");
+        if (_menuApi == null)
+        {
+            Logger.LogInformation("[ShowEmoteMenu] _menuApi is null");
+            return;
+        }
 
-        List<MenuItem> items = [];
-        var emoteMap = new Dictionary<int, string>();
-        int i = 0;
+        string title = isDance
+            ? Localizer.ForPlayer(player, "emote.dancemenutitle")
+            : Localizer.ForPlayer(player, "emote.emotemenutitle");
+
+        var menu = _menuApi.GetMenu(title);
+        bool hasAny = false;
 
         foreach (var emote in Config.EmoteDances)
         {
             if (isDance && emote.IsEmote)
                 continue;
-            else if (!isDance && !emote.IsEmote)
+            if (!isDance && !emote.IsEmote)
                 continue;
 
+            hasAny = true;
             bool hasPerm = HasPermision(player, emote.Permission);
+            string emoteName = Localizer.ForPlayer(player, emote.Name);
 
-            items.Add(new MenuItem(hasPerm ? MenuItemType.Button : MenuItemType.Text, [new MenuValue(Localizer.ForPlayer(player, emote.Name))]));
-            emoteMap[i++] = Localizer.ForPlayer(player, emote.Name);
-        }
-
-        if (items.Count == 0)
-        {
-            player.PrintToChat($" {Localizer.ForPlayer(player, "emote.prefix")} No {(isDance ? "dances" : "emotes")} found.");
-            return;
-        }
-
-        Menu?.ShowScrollableMenu(player, title, items, (buttons, menu, selected) =>
-        {
-            if (selected == null) return;
-
-            if (buttons == MenuButtons.Select && emoteMap.TryGetValue(menu.Option, out var emoteSelected))
+            menu.AddMenuOption(emoteName, (p, _) =>
             {
-                var emote = GetEmoteByName(emoteSelected, !isDance);
-
-                if (emote == null)
-                    return;
-
                 string error = "";
-                if (!PlayEmote(player, emote, ref error))
-                {
-                    if (!string.IsNullOrEmpty(error))
-                        player.PrintToChat(error);
-                }
-            }
-        }, false, freezePlayer: true, disableDeveloper: !Config.KitsuneMenuDeveloperDisplay);
-    }
-
-    private void ShowChatMenu(CCSPlayerController player, bool isDance)
-    {
-        string title = isDance ? Localizer.ForPlayer(player, "emote.dancemenutitle") : Localizer.ForPlayer(player, "emote.emotemenutitle");
-
-        var menu = new ChatMenu(title);
-
-        var OnEmoteSelect = (CCSPlayerController player, ChatMenuOption option) =>
-        {
-            MenuManager.CloseActiveMenu(player);
-
-            string emoteName = option.Text;
-
-            var emote = GetEmoteByName(emoteName, !isDance);
-
-            if (emote == null)
-                return;
-
-            string error = "";
-            if (!PlayEmote(player, emote, ref error))
-            {
-                if (!string.IsNullOrEmpty(error))
-                    player.PrintToChat(error);
-            }
-        };
-
-        foreach (var emote in Config.EmoteDances)
-        {
-            if (isDance && emote.IsEmote)
-                continue;
-            else if (!isDance && !emote.IsEmote)
-                continue;
-
-            bool hasPerm = HasPermision(player, emote.Permission);
-
-            string emoteName = $"{Localizer.ForPlayer(player, $"{emote.Name}")}";
-
-            menu.AddMenuOption(emoteName, OnEmoteSelect, !hasPerm);
+                if (!PlayEmote(p, emote, ref error) && !string.IsNullOrEmpty(error))
+                    p.PrintToChatWithSound(error, "Vote.Failed", isWarning: true);
+            }, !hasPerm);
         }
 
-        MenuManager.OpenChatMenu(player, menu);
-    }
-
-    private void ShowCenterMenu(CCSPlayerController player, bool isDance)
-    {
-        string title = isDance ? Localizer.ForPlayer(player, "emote.dancemenutitle") : Localizer.ForPlayer(player, "emote.emotemenutitle");
-
-        var menu = new CenterHtmlMenu(title, this);
-
-        var OnEmoteSelect = (CCSPlayerController player, ChatMenuOption option) =>
+        if (!hasAny)
         {
-            MenuManager.CloseActiveMenu(player);
-
-            string emoteName = option.Text;
-
-            var emote = GetEmoteByName(emoteName, !isDance);
-
-            if (emote == null)
-                return;
-
-            string error = "";
-            if (!PlayEmote(player, emote, ref error))
-            {
-                player.PrintToChat(error);
-            }
-        };
-
-        foreach (var emote in Config.EmoteDances)
-        {
-            if (isDance && emote.IsEmote)
-                continue;
-            else if (!isDance && !emote.IsEmote)
-                continue;
-
-            bool hasPerm = HasPermision(player, emote.Permission);
-
-            string emoteName = $"{Localizer.ForPlayer(player, $"{emote.Name}")}";
-
-            menu.AddMenuOption(emoteName, OnEmoteSelect, !hasPerm);
+            player.PrintToChatWithSound(
+                $"No {(isDance ? "dances" : "emotes")} found.",
+                "Vote.Failed",
+                isWarning: true);
+            return;
         }
 
-        MenuManager.OpenCenterHtmlMenu(this, player, menu);
+        menu.PostSelectAction = PostSelectAction.Close;
+        menu.ExitButton = true;
+        menu.Open(player);
     }
 
     public string GetEmoteTranslation(string name)

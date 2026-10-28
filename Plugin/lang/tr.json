@@ -1,7 +1,7 @@
 {
-    "emote.prefix": "[{green}CR-Emotes{default}]",
     "emote.command.help": "Beklenen Kullanım: {lime}!{0} {1}",
     "emote.command.no-permission": "{lightred}Bu komut için yetkiniz yok.",
+    "emote.vip-required": "{lightred}Emote kullanmak için VIP erişimi gerekli. {default}Mağaza: {lime}https://www.hsmania.net",
     "emote.command.server-only": "{lightred}Bu komut yalnızca sunucu tarafından kullanılabilir.",
     "emote.command.client-only": "{lightred}Bu komut yalnızca istemciler tarafından kullanılabilir.",
     "emote.emotemenutitle": "İfade Menüsü",
@@ -31,7 +31,6 @@
     "emote.list-chat-triggers": "İfadeler/Danslar için sohbet tetikleyicilerinin listesi.",
     "emote.notallowed.warmupftcheck": "{lightred}Bu komutu yalnızca ısınma veya tur başında kullanabilirsiniz.",
     "emote.notallowed.warmupftrecheck": "{lightred}Bu komutu yalnızca ısınma / tur başı / tur sonu sırasında kullanabilirsiniz.",
-
     "DanceMoves": "Dans Hareketleri",
     "ElectroShuffle": "Elektro Shuffle",
     "Emote_AerobicChamp": "Aerobik",

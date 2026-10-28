@@ -1,7 +1,7 @@
 {
-    "emote.prefix": "[{green}CR-Emotes{default}]",
     "emote.command.help": "Ожидаемое использование: {lime}!{0} {1}",
     "emote.command.no-permission": "{lightred}У вас нет прав для использования этой команды.",
+    "emote.vip-required": "{lightred}Для эмоций нужен доступ VIP. {default}Магазин: {lime}https://www.hsmania.net",
     "emote.command.server-only": "{lightred}Эту команду можно использовать только на сервере.",
     "emote.command.client-only": "{lightred}Эту команду можно использовать только на клиенте.",
     "emote.emotemenutitle": "Меню эмоций",
@@ -31,7 +31,6 @@
     "emote.list-chat-triggers": "Вот список чат-триггеров для эмоций/танцев.",
     "emote.notallowed.warmupftcheck": "{lightred}Эту команду можно использовать только в разминке или во время заморозки.",
     "emote.notallowed.warmupftrecheck": "{lightred}Эту команду можно использовать только в разминке/заморозке/в конце раунда.",
-
     "DanceMoves": "Dance Moves",
     "ElectroShuffle": "Electro Shuffle",
     "Emote_AerobicChamp": "Aerobic",

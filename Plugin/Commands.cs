@@ -85,14 +85,14 @@ public partial class Plugin
             case CommandUsage.CLIENT_ONLY:
                 if (player == null || !player.IsValid)
                 {
-                    info.ReplyToCommand($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, "emote.command.client-only")}");
+                    info.ReplyToCommand(PrefixRed + Localizer.ForPlayer(player, "emote.command.client-only"));
                     return false;
                 }
                 break;
             case CommandUsage.SERVER_ONLY:
                 if (player != null)
                 {
-                    info.ReplyToCommand($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, "emote.command.server-only")}");
+                    info.ReplyToCommand(PrefixRed + Localizer.ForPlayer(player, "emote.command.server-only"));
                     return false;
                 }
                 break;
@@ -102,7 +102,7 @@ public partial class Plugin
         {
             if (player != null && !AdminManager.PlayerHasPermissions(player, permission) && !AdminManager.PlayerHasCommandOverride(player, @info.GetArg(0)))
             {
-                info.ReplyToCommand($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, "emote.command.no-permission")}");
+                info.ReplyToCommand(PrefixRed + Localizer.ForPlayer(player, "emote.command.no-permission"));
                 return false;
             }
         }
@@ -112,7 +112,7 @@ public partial class Plugin
             int checkArgCount = argCount + 1;
             if (info.ArgCount < checkArgCount)
             {
-                info.ReplyToCommand($" {Localizer.ForPlayer(player, "emote.prefix")} {Localizer.ForPlayer(player, "emote.command.help", info.ArgByIndex(0), helpText)}");
+                info.ReplyToCommand(Prefix + Localizer.ForPlayer(player, "emote.command.help", info.ArgByIndex(0), helpText));
                 return false;
             }
         }
@@ -145,7 +145,7 @@ public partial class Plugin
 public static class CallerIdentifier
 {
 	private static readonly string CurrentPluginName = Assembly.GetExecutingAssembly().GetName().Name!;
-    private static readonly string[] BlockAssemblies = ["System.", "FortniteEmotesNDancesAPI", "KitsuneMenu"];
+    private static readonly string[] BlockAssemblies = ["System.", "FortniteEmotesNDancesAPI", "MenuManagerApi"];
 
 	public static string GetCallingPluginName()
 	{

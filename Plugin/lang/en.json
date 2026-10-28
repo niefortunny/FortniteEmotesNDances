@@ -1,7 +1,7 @@
 {
-    "emote.prefix": "[{green}CR-Emotes{default}]",
     "emote.command.help": "Expected Usage: {lime}!{0} {1}",
     "emote.command.no-permission": "{lightred}You do not have permission to use this command.",
+    "emote.vip-required": "{lightred}VIP access is required to use emotes. {default}Shop: {lime}https://www.hsmania.net",
     "emote.command.server-only": "{lightred}This command can only be used by the server.",
     "emote.command.client-only": "{lightred}This command can only be used by clients.",
     "emote.emotemenutitle": "Emote Menu",
@@ -31,7 +31,6 @@
     "emote.list-chat-triggers": "Here is a list of chat triggers for emotes/dances.",
     "emote.notallowed.warmupftcheck": "{lightred}You can only use this command in warmup or freezetime.",
     "emote.notallowed.warmupftrecheck": "{lightred}You can only use this command in warmup / freezetime / round-end.",
-
     "DanceMoves": "Dance Moves",
     "ElectroShuffle": "Electro Shuffle",
     "Emote_AerobicChamp": "Aerobic",
